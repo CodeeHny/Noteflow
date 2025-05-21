@@ -1,4 +1,6 @@
-import { User } from "../models/user.model.js"
+import { User } from "../models/user.model.js";
+import bcrpt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const registerUser = async (req, res) => {
     try {
@@ -32,8 +34,47 @@ const registerUser = async (req, res) => {
     }
 }
 
+const loginUser = async (req, res) => {
+    // email, password - req.body 
+    // check if email exist or not 
+    // check password 
+    // access user 
+    // send token 
 
+    let { email, password } = req.body;
+
+    if ([email, password].some((field) => !field?.trim())) return res.status(400).json({ message: "All field required" });
+
+    let user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found " });
+
+    let isPasswordCorrect = await bcrpt.compare(password, user.password);
+    if (!isPasswordCorrect) return res.status(400).json({ message: "Password is wrong" });
+
+    let userData = {
+        _id: user._id,
+        email: user.email
+    };
+
+    let token = jwt.sign(
+        {
+            userId: user._id
+        },
+        process.env.JWT_TOKEN_SECRET
+    );
+
+    return res
+    .status(500)
+    .cookie("AccessToken", token)
+    .json({
+        message: "User logged in successfully",
+        user: userData
+    })
+
+
+}
 
 export {
     registerUser,
+    loginUser
 }
