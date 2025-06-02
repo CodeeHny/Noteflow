@@ -65,7 +65,7 @@ const loginUser = async (req, res) => {
 
     return res
     .status(500)
-    .cookie("AccessToken", token)
+    .cookie("accessToken", token)
     .json({
         message: "User logged in successfully",
         user: userData
@@ -74,7 +74,16 @@ const loginUser = async (req, res) => {
 
 }
 
+const logoutUser = async (req, res) => {
+    res.clearCookie("accessToken");
+    return res.status(200).json({ message: "User logged out successfully" })
+}
+
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser,
 }
+// change profile 
+// change password 
+// delete account 
