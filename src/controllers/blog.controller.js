@@ -79,7 +79,7 @@ const deleteBlog = async (req, res) => {
 
         let blogIndex = user.blogs.indexOf(req.params.blogId);
         user.blogs.splice(blogIndex, 1);
-        user.save({ validateBeforeSave: false });
+        await user.save({ validateBeforeSave: false });
 
         return res
             .status(200)
@@ -97,8 +97,62 @@ const deleteBlog = async (req, res) => {
 
 }
 
+const viewsCount = async (req, res) => {
+    try {
+        let blog = await Blog.findById(req.params.blogId);
+        if (!blog) return res.status(404).json({ message: "Blog not found." });
+
+        blog.viewCount += 1;
+        await blog.save();
+
+        return res
+            .status(200)
+            .json({
+                message: "Views updated",
+                updatedView: blog.viewCount
+            });
+
+    } catch (error) {
+        res.status(500).json({ error: "Something went wrong while adding view " });
+        console.log("Error : ", error);
+    }
+}
+
+const likeBlog = async (req, res) => {
+    try {
+        
+        let blog = await Blog.findById(req.params.blogId);
+        if(!blog) return res.status(404).json({message: "Blog not found"});
+
+        if(blog.likes.includes(req.user._id)){
+            blog.likes.pull(req.user._id);
+            await blog.save()
+        }
+        else {
+            blog.likes.push(req.user._id);
+            await blog.save()
+        }
+
+        return res 
+        .status(200)
+        .json({
+            message: "Blog Liked ",
+            likeCount: blog.likes.length,        })
+
+    } catch (error) {
+        res.status(500).json({error: "Failed to like blog "});
+        console.log("Error : ", error);
+    }
+}
+
+const comment = async (req, res ) => {
+    
+}
+
 export {
     createBlog,
     updateBlog,
     deleteBlog,
+    viewsCount,
+    likeBlog,
 }
