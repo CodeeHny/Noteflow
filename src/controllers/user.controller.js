@@ -35,12 +35,6 @@ const registerUser = async (req, res) => {
 }
 
 const loginUser = async (req, res) => {
-    // email, password - req.body 
-    // check if email exist or not 
-    // check password 
-    // access user 
-    // send token 
-
     let { email, password } = req.body;
 
     if ([email, password].some((field) => !field?.trim())) return res.status(400).json({ message: "All field required" });
@@ -70,8 +64,6 @@ const loginUser = async (req, res) => {
         message: "User logged in successfully",
         user: userData
     })
-
-
 }
 
 const logoutUser = async (req, res) => {

@@ -1,4 +1,5 @@
-import { Blog } from "../models/blog.model.js"
+import { Blog } from "../models/blog.model.js";
+import { Comment } from "../models/comment.model.js";
 import { User } from "../models/user.model.js";
 
 
@@ -97,7 +98,7 @@ const deleteBlog = async (req, res) => {
 
 }
 
-const viewsCount = async (req, res) => {
+const viewBlog = async (req, res) => {
     try {
         let blog = await Blog.findById(req.params.blogId);
         if (!blog) return res.status(404).json({ message: "Blog not found." });
@@ -108,8 +109,8 @@ const viewsCount = async (req, res) => {
         return res
             .status(200)
             .json({
-                message: "Views updated",
-                updatedView: blog.viewCount
+                message: "Blog fetched successfully",
+                blog,
             });
 
     } catch (error) {
@@ -120,11 +121,11 @@ const viewsCount = async (req, res) => {
 
 const likeBlog = async (req, res) => {
     try {
-        
-        let blog = await Blog.findById(req.params.blogId);
-        if(!blog) return res.status(404).json({message: "Blog not found"});
 
-        if(blog.likes.includes(req.user._id)){
+        let blog = await Blog.findById(req.params.blogId);
+        if (!blog) return res.status(404).json({ message: "Blog not found" });
+
+        if (blog.likes.includes(req.user._id)) {
             blog.likes.pull(req.user._id);
             await blog.save()
         }
@@ -133,26 +134,54 @@ const likeBlog = async (req, res) => {
             await blog.save()
         }
 
-        return res 
-        .status(200)
-        .json({
-            message: "Blog Liked ",
-            likeCount: blog.likes.length,        })
+        return res
+            .status(200)
+            .json({
+                message: "Blog Liked ",
+                likeCount: blog.likes.length,
+            })
 
     } catch (error) {
-        res.status(500).json({error: "Failed to like blog "});
+        res.status(500).json({ error: "Failed to like blog " });
         console.log("Error : ", error);
     }
 }
 
-const comment = async (req, res ) => {
-    
+const createComment = async (req, res) => {
+    let { content, parentComment } = req.body;
+    let blog = await Blog.findById(req.params.blogId);
+
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
+
+    if (!content.trim()) return res.status(400).json({ message: "Content is required" });
+    parentComment = parentComment?.trim() || null;
+
+
+    let comment = await Comment.create({
+        blogId: blog._id,
+        author: req.user._id,
+        content,
+        parentComment,
+    });
+
+    if (!comment) return res.status(400).json({ message: "Something went qrong while commenting on blog" });
+
+    blog.comments.push(comment._id);
+    await blog.save();
+
+    return res
+        .status(201)
+        .json({
+            message: "comment successfully",
+            comment,
+        })
 }
 
 export {
     createBlog,
     updateBlog,
     deleteBlog,
-    viewsCount,
+    viewBlog,
     likeBlog,
+    createComment
 }
